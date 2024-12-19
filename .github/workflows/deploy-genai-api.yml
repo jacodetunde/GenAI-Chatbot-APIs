@@ -28,7 +28,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
       - name: Build, tag, and push docker image to Amazon ECR
-        working-directory: ./api-deployment
+        working-directory: ./api-deployment/app
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: genai-tutorial-backend
