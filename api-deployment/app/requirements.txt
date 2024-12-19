@@ -1,0 +1,11 @@
+langchain==0.2.7 
+pydantic==2.8.2 
+langchain_openai 
+langchain_community 
+langchain_core 
+langchain_qdrant
+qdrant-client 
+pymupdf
+python-dotenv
+fastapi
+uvicorn
