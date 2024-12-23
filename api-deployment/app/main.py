@@ -104,13 +104,9 @@ def chat_process(
     Authorization: Union[Any, None] = Header(None)
 ) -> Any:
     person_id = authenticate(Authorization)
-    if not person_id:
+    if person_id:
         return {"error": "Unauthorized or invalid token"}
-
-    # Transform UserRequest into the expected format
     message_list = [{"sender": "user", "text": user_request.UserInput}]
-
-    # Call chat_completion with correct format
     return StreamingResponse(chat_completion(message_list))
 
 
