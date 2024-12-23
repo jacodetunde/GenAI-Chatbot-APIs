@@ -1,4 +1,4 @@
-name: Build and Deploy Maz Writing Assistant Backend Image to ECR
+name: Build and Deploy GenAI API Backend Image to ECR
 on:
   workflow_dispatch:
   push:
