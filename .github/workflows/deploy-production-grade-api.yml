@@ -1,0 +1,47 @@
+name: Build and Deploy Basic GenAI API Backend Image to ECR
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - episodes/production-grade-api/**
+      - .github/workflows/deploy-production-grade-api.yml
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  ecr-build-and-deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::369886907351:role/ola-github-actions
+          role-session-name: GenaiTutorialBuildSession
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build, tag, and push docker image to Amazon ECR
+        working-directory: ./episodes/production-grade-api
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: production-grade-api-repo
+          IMAGE_TAG: ${{ github.sha }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLIENT_SECRET: ${{ secrets.API_SECRET }}
+          MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
+        run: |
+          docker build \
+          -t $REGISTRY/$REPOSITORY:$IMAGE_TAG \
+          --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} \
+          --build-arg MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING} \
+          --build-arg CLIENT_SECRET=${CLIENT_SECRET} . 
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          echo "IMAGE_NAME=${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
+      - name: Update Lambda deployment to use new image
+        run: aws lambda update-function-code --function-name=production-grade-api-backend --image-uri=${{ env.IMAGE_NAME }}

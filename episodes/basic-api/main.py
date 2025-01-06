@@ -34,11 +34,14 @@ string_padding = "<<<" + (" " * 1000) + ">>>"
 vectorstore = None
 
 
+
 def authenticate(auth_token: Any) -> Optional[Any]:
     bearer_token: str = auth_token.replace("Bearer ", "")
     output_payload: Dict[str, Any] = jwt.decode(bearer_token, client_secret, algorithms=["HS256"])
     if "person_id" in output_payload:
         return str(output_payload["person_id"])
+    
+    return None
 
 
 def get_vectorstore():
@@ -101,11 +104,12 @@ class UserRequest(BaseModel):
 @app.post("/chat_process")
 def chat_process(
     user_request: UserRequest,
-    Authorization: Union[Any, None] = Header(None)
+    Authorization: Union[str, None] = Header(None),
 ) -> Any:
     person_id = authenticate(Authorization)
-    if person_id:
+    if not person_id:
         return {"error": "Unauthorized or invalid token"}
+
     message_list = [{"sender": "user", "text": user_request.UserInput}]
     return StreamingResponse(chat_completion(message_list))
 
