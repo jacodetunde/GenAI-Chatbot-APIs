@@ -116,7 +116,9 @@ def save_conversation_history(person_id: str, history: List[Dict[str, Any]]):
     )
 
 
-def save_user_feedback(person_id, bot_message_text, user_feedback):  # type: ignore
+def save_user_feedback(
+    person_id: str, bot_message_text: str, user_feedback: str
+) -> bool:
     found_message = False
     user_conversation = conversation_collection.find_one({"person_id": person_id})
     if not user_conversation or "messages" not in user_conversation:
@@ -264,7 +266,7 @@ def save_feedback(
     feedback_request: FeedBackRequest,
     Authorization: Annotated[Union[Any, None], Header()] = None,
 ) -> StreamingResponse:
-    logger.info(f"Recieved feedback: {feedback_request}")
+    logger.info(f"Received feedback: {feedback_request}")
     person_id = authenticate(Authorization)
     if person_id:
         logger.info(f"Authenticated user: {person_id}")
