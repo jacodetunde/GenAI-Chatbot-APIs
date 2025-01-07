@@ -11,18 +11,10 @@ permissions:
 jobs:
   ecr-build-and-deploy:
     runs-on: ubuntu-20.04
-
-    services:
-      mongo:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
-
-      - name: Build Docker Image
+      - name: Build docker image
         working-directory: ./apis/production-grade-api
         env:
           REPOSITORY: production-grade-api-repo
@@ -34,18 +26,9 @@ jobs:
           --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} \
           --build-arg CLIENT_SECRET='my_client_secret' \
           --build-arg MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING} .
-
-      - name: Run Image
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
+      - name: Run image
         run: |
-          CONTAINER_ID=$(docker run -d \
-            -p 8080:8080 \
-            -e OPENAI_API_KEY=${OPENAI_API_KEY} \
-            -e CLIENT_SECRET='my_client_secret' \
-            -e MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING} \
-            production-grade-api-repo)
+          CONTAINER_ID=$(docker run -d -p 8080:8080 production-grade-api-repo)
           sleep 20
           docker ps -a
           docker inspect $CONTAINER_ID
@@ -55,29 +38,7 @@ jobs:
               echo "FAILED";
               exit 1
           fi
-
-      - name: Wait for API to be Ready
+      - name: Test image
         run: |
-          for i in {1..10}; do
-            if curl -s http://localhost:8080/health; then
-              echo "API is ready";
-              break;
-            else
-              echo "Waiting for API to be ready...";
-              sleep 5;
-            fi;
-          done
-
-      - name: Test Image
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MONGO_CONNECTION_STRING: "mongodb://host.docker.internal:27017"
-        run: |
-          python -m venv venv
-          source venv/bin/activate
           pip install -r tests/production-grade-api-test/requirements.txt
-          pytest -s -v tests/production-grade-api-test/
-
-      - name: Debug Docker Container
-        run: |
-          docker logs $(docker ps -q --filter ancestor=production-grade-api-repo)
+          pytest tests/production-grade-api-test/
