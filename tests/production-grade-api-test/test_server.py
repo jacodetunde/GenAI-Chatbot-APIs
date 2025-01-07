@@ -55,6 +55,7 @@ def test_save_feedback():
     parsed_response = re.sub(buffer_padding_template, "", decoded_message_response)
 
     feedback_data = {
+        "person_id": test_person_id,
         "bot_message": parsed_response,
         "user_feedback": "test",
     }
