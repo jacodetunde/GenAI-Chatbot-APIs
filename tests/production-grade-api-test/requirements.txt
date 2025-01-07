@@ -1,4 +1,5 @@
 pytest==8.2.2
 pyjwt==2.9.0
 python-dotenv==1.0.1
+pytest-dotenv
 pydantic==2.8.2

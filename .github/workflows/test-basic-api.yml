@@ -24,7 +24,7 @@ jobs:
           docker build \
           -t basic-api-repo \
           --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} \
-          --build-arg CLIENT_SECRET='my_client_secret' \
+           --build-arg CLIENT_SECRET=${CLIENT_SECRET} \
           --build-arg MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING} .
       - name: Run image
         run: |

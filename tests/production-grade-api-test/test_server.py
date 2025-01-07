@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 client_secret = os.getenv("CLIENT_SECRET", "my_client_secret")
-server_url = os.getenv("SERVER_URL", "http://localhost:8080")
+server_url = os.getenv("SERVER_URL", "http://localhost:8000")
 
 test_person_id = "automation-test-user-" + uuid.uuid4().hex
 
@@ -35,9 +35,9 @@ def test_chat_process():
 
 
 def test_save_feedback():
-
     buffer_padding_template = re.compile(r"(<<<) *(>>>)|(<<<) *| *(>>>)")
 
+    # Generate an authorization header
     auth_dict = {"person_id": test_person_id}
     auth_header = jwt.encode(auth_dict, client_secret, algorithm="HS256")
     headers = {
@@ -55,7 +55,6 @@ def test_save_feedback():
     parsed_response = re.sub(buffer_padding_template, "", decoded_message_response)
 
     feedback_data = {
-        "person_id": test_person_id,
         "bot_message": parsed_response,
         "user_feedback": "test",
     }
@@ -64,8 +63,3 @@ def test_save_feedback():
     )
 
     assert response.status_code == 200
-
-
-if __name__ == "__main__":
-    test_chat_process()
-    test_save_feedback()

@@ -33,7 +33,7 @@ jobs:
           REPOSITORY: production-grade-api-repo
           IMAGE_TAG: ${{ github.sha }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          CLIENT_SECRET: ${{ secrets.API_SECRET }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
         run: |
           docker build \
