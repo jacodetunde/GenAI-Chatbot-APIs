@@ -38,7 +38,10 @@ jobs:
               echo "FAILED";
               exit 1
           fi
-      - name: Test image
+      - name: Setup Python Environment
         run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
           pip install -r tests/production-grade-api-test/requirements.txt
           pytest tests/production-grade-api-test/
