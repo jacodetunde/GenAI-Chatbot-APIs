@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class Settings: # type: ignore
+class Settings: 
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
     if not OPENAI_API_KEY:
         raise EnvironmentError("OPENAI_API_KEY not set in environment variables")

@@ -22,8 +22,8 @@ app = FastAPI()
 
 # Load environment variables
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY", "my_api_key")
-client_secret = os.getenv("CLIENT_SECRET", "my_client_secret")
+openai_api_key: str = os.getenv("OPENAI_API_KEY", "my_api_key")
+client_secret: str = os.getenv("CLIENT_SECRET", "my_client_secret")
 
 openai_client = OpenAI(api_key=openai_api_key)
 default_max_tokens = 4096
@@ -38,7 +38,7 @@ string_padding = "<<<" + (" " * 1000) + ">>>"
 vectorstore = None
 
 
-def authenticate(auth_token: Any) -> Optional[Any]: # type: ignore
+def authenticate(auth_token: Any) -> Optional[Any]: 
     bearer_token: str = auth_token.replace("Bearer ", "")
     output_payload: Dict[str, Any] = jwt.decode(
         bearer_token, client_secret, algorithms=["HS256"]
@@ -49,7 +49,7 @@ def authenticate(auth_token: Any) -> Optional[Any]: # type: ignore
     return None
 
 
-def get_vectorstore(): # type: ignore
+def get_vectorstore() -> Optional[Qdrant]:
     global vectorstore
     if vectorstore is not None:
         return vectorstore  # Reuse the existing vectorstore
@@ -92,7 +92,7 @@ def get_vectorstore(): # type: ignore
         raise RuntimeError("Failed to initialize vectorstore")
 
 
-def get_prompt():
+def get_prompt() -> str:
     return """Provide answers to the user's question as bullet points. Most of your response should come from the {context}.
         Be creative, concise, and as practical as possible."""
 

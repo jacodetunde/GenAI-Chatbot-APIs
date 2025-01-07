@@ -28,9 +28,9 @@ app = FastAPI()
 
 # Load environment variables
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY", "my_api_key")
-client_secret = os.getenv("CLIENT_SECRET", "my_client_secret")
-mongo_connection_string = os.getenv("MONGO_CONNECTION_STRING")
+openai_api_key: str = os.getenv("OPENAI_API_KEY", "my_api_key")
+client_secret: str = os.getenv("CLIENT_SECRET", "my_client_secret")
+mongo_connection_string: str =os.getenv("MONGO_CONNECTION_STRING")
 
 # MongoDB Setup
 mongo_client = MongoClient(mongo_connection_string)
@@ -60,7 +60,7 @@ def authenticate(auth_token: Any) -> Optional[Any]: # type: ignore
     return None
 
 
-def get_vectorstore(): # type: ignore
+def get_vectorstore() -> Optional[Qdrant]:
     global vectorstore
     if vectorstore is not None:
         return vectorstore  # Reuse the existing vectorstore
@@ -155,7 +155,7 @@ class FeedBackRequest(BaseModel): # type: ignore
     user_feedback: str
 
 
-def get_prompt():
+def get_prompt() -> str:
     return (
         "Provide answers to the user's question as bullet points. "
         "Most of your response should come from the {context}. "
