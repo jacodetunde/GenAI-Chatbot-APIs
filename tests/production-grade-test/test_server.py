@@ -48,7 +48,9 @@ def test_save_feedback():
     message_data = {
         "UserInput": "Hello there!",
     }
-    message_response = requests.post(server_url + "/chat_process", headers=headers, json=message_data)
+    message_response = requests.post(
+        server_url + "/chat_process", headers=headers, json=message_data
+    )
     decoded_message_response = message_response.content.decode("utf-8")
     parsed_response = re.sub(buffer_padding_template, "", decoded_message_response)
 
@@ -56,9 +58,12 @@ def test_save_feedback():
         "bot_message": parsed_response,
         "user_feedback": "test",
     }
-    response = requests.post(server_url + "/save_feedback", headers=headers, json=feedback_data)
+    response = requests.post(
+        server_url + "/save_feedback", headers=headers, json=feedback_data
+    )
 
     assert response.status_code == 200
+
 
 if __name__ == "__main__":
     test_chat_process()

@@ -3,7 +3,11 @@ import jwt
 from pydantic import BaseModel
 from fastapi import FastAPI, Header
 from fastapi.responses import StreamingResponse
-from langchain_community.document_loaders import DirectoryLoader, TextLoader, PyMuPDFLoader
+from langchain_community.document_loaders import (
+    DirectoryLoader,
+    TextLoader,
+    PyMuPDFLoader,
+)
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Qdrant
 from langchain_openai import OpenAIEmbeddings
@@ -34,13 +38,14 @@ string_padding = "<<<" + (" " * 1000) + ">>>"
 vectorstore = None
 
 
-
 def authenticate(auth_token: Any) -> Optional[Any]:
     bearer_token: str = auth_token.replace("Bearer ", "")
-    output_payload: Dict[str, Any] = jwt.decode(bearer_token, client_secret, algorithms=["HS256"])
+    output_payload: Dict[str, Any] = jwt.decode(
+        bearer_token, client_secret, algorithms=["HS256"]
+    )
     if "person_id" in output_payload:
         return str(output_payload["person_id"])
-    
+
     return None
 
 
@@ -75,7 +80,8 @@ def get_vectorstore():
         # Initialize embedding model and vectorstore
         embeddings = OpenAIEmbeddings(model=settings.EMBEDDING_MODEL)
         vectorstore = Qdrant.from_documents(
-            texts, embeddings,
+            texts,
+            embeddings,
             location=":memory:",
             collection_name="PMarca",
         )
@@ -87,10 +93,8 @@ def get_vectorstore():
 
 
 def get_prompt():
-    return (
-        """Provide answers to the user's question as bullet points. Most of your response should come from the {context}.
+    return """Provide answers to the user's question as bullet points. Most of your response should come from the {context}.
         Be creative, concise, and as practical as possible."""
-    )
 
 
 class UserRequest(BaseModel):

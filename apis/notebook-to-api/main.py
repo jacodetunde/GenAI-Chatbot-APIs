@@ -2,7 +2,11 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
-from langchain_community.document_loaders import DirectoryLoader, TextLoader, PyMuPDFLoader
+from langchain_community.document_loaders import (
+    DirectoryLoader,
+    TextLoader,
+    PyMuPDFLoader,
+)
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Qdrant
 from langchain.globals import set_llm_cache
@@ -24,15 +28,15 @@ if not openai_api_key:
 # Embed the documents
 # Configuration variables
 embedding_model = "text-embedding-3-small"
-doc_source_path = 'knowledgebase/'
+doc_source_path = "knowledgebase/"
 chunk_size = 1800
 chunk_overlap = 300
 
 # Load txt documents
 text_loader = DirectoryLoader(
     doc_source_path,
-    glob="**/*.txt", 
-    loader_cls=TextLoader, 
+    glob="**/*.txt",
+    loader_cls=TextLoader,
 )
 pdf_loader = DirectoryLoader(
     doc_source_path,
@@ -55,9 +59,10 @@ embeddings = OpenAIEmbeddings(model=embedding_model)
 
 # Set up vectorstore
 vectorstore = Qdrant.from_documents(
-    texts, embeddings,
+    texts,
+    embeddings,
     location=":memory:",
-    collection_name="PMarca", 
+    collection_name="PMarca",
 )
 
 # Initiate document retriever
@@ -75,15 +80,21 @@ prompt = PromptTemplate.from_template(
     Be creative, concise and be as practical as possible"""
 )
 rag_chain = (
-    RunnablePassthrough.assign(context=lambda inputs: [doc.page_content for doc in retriever.invoke(inputs["question"])])
+    RunnablePassthrough.assign(
+        context=lambda inputs: [
+            doc.page_content for doc in retriever.invoke(inputs["question"])
+        ]
+    )
     | prompt
     | llm
     | StrOutputParser()
 )
 
+
 # Define Pydantic model for requests
 class QuestionRequest(BaseModel):
     question: str
+
 
 # API endpoint to handle questions
 @app.post("/ask")
@@ -95,4 +106,4 @@ def ask_question(request: QuestionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-#run this on the terminal uvicorn main:app --reload
+# run this on the terminal uvicorn main:app --reload

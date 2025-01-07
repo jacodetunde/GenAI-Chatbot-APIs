@@ -3,9 +3,13 @@ import jwt
 import datetime
 from pydantic import BaseModel
 from pymongo import MongoClient
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header
 from fastapi.responses import StreamingResponse
-from langchain_community.document_loaders import DirectoryLoader, TextLoader, PyMuPDFLoader
+from langchain_community.document_loaders import (
+    DirectoryLoader,
+    TextLoader,
+    PyMuPDFLoader,
+)
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Qdrant
 from langchain_openai import OpenAIEmbeddings
@@ -45,12 +49,14 @@ string_padding = "<<<" + (" " * 1000) + ">>>"
 vectorstore = None
 
 
-def authenticate(auth_token: Any) -> Optional[Any]:
+def authenticate(auth_token: Any) -> Optional[Any]: #type ignore
     bearer_token: str = auth_token.replace("Bearer ", "")
-    output_payload: Dict[str, Any] = jwt.decode(bearer_token, client_secret, algorithms=["HS256"])
+    output_payload: Dict[str, Any] = jwt.decode(
+        bearer_token, client_secret, algorithms=["HS256"]
+    )
     if "person_id" in output_payload:
         return str(output_payload["person_id"])
-    
+
     return None
 
 
@@ -85,7 +91,8 @@ def get_vectorstore():
         # Initialize embedding model and vectorstore
         embeddings = OpenAIEmbeddings(model=settings.EMBEDDING_MODEL)
         vectorstore = Qdrant.from_documents(
-            texts, embeddings,
+            texts,
+            embeddings,
             location=":memory:",
             collection_name="PMarca",
         )
@@ -96,17 +103,18 @@ def get_vectorstore():
         raise RuntimeError("Failed to initialize vectorstore")
 
 
-def load_conversation_history(person_id: str) -> List[Dict[str, Any]]:
+def load_conversation_history(person_id: str) -> List[Dict[str, Any]]: # type ignore
     user_conversation = conversation_collection.find_one({"person_id": person_id})
     return user_conversation.get("messages", []) if user_conversation else []
 
 
-def save_conversation_history(person_id: str, history: List[Dict[str, Any]]):
+def save_conversation_history(person_id: str, history: List[Dict[str, Any]]): #type ignoew
     conversation_collection.update_one(
         {"person_id": person_id},
         {"$set": {"messages": history}},
         upsert=True,
     )
+
 
 def save_user_feedback(person_id, bot_message_text, user_feedback):
     found_message = False
@@ -121,7 +129,8 @@ def save_user_feedback(person_id, bot_message_text, user_feedback):
         message = messages[idx]
         if (
             message.get("role") == "assistant"
-            and message.get("content", "").strip()[:100] == bot_message_text.strip()[:100]
+            and message.get("content", "").strip()[:100]
+            == bot_message_text.strip()[:100]
         ):
             message["feedback"] = user_feedback
             found_message = True
@@ -152,6 +161,7 @@ def get_prompt():
         "Most of your response should come from the {context}. "
         "Be creative, concise, and as practical as possible."
     )
+
 
 @app.post("/chat_process")
 def chat_process(
@@ -196,18 +206,25 @@ async def chat_completion(
             user_conversation_history[0]["content"] = system_prompt
             user_conversation_history[0]["timestamp"] = datetime.datetime.now()
         else:
-            user_conversation_history.insert(0, {"role": "system", "content": system_prompt})
+            user_conversation_history.insert(
+                0, {"role": "system", "content": system_prompt}
+            )
 
         # # Add retrieved context to conversation history
         user_conversation_history.append(
-            {"role": "user", "content": user_input, "timestamp": datetime.datetime.now()}
+            {
+                "role": "user",
+                "content": user_input,
+                "timestamp": datetime.datetime.now(),
+            }
         )
 
         # Format the messages for OpenAI API
         formatted_message = [
             {"role": m["role"], "content": m["content"]}
             for m in user_conversation_history
-            if isinstance(m.get("content"), str) and m.get("role") in ["system", "user", "assistant"]
+            if isinstance(m.get("content"), str)
+            and m.get("role") in ["system", "user", "assistant"]
         ]
         message_list_formatted = formatted_message[-message_context_limit:]
 
@@ -227,7 +244,11 @@ async def chat_completion(
 
         # Save assistant message to conversation history
         user_conversation_history.append(
-            {"role": "assistant", "content": response_text, "timestamp": datetime.datetime.now()}
+            {
+                "role": "assistant",
+                "content": response_text,
+                "timestamp": datetime.datetime.now(),
+            }
         )
 
         # Save updated conversation history to MongoDB
@@ -241,7 +262,7 @@ async def chat_completion(
 @app.post("/save_feedback")
 def save_feedback(
     feedback_request: FeedBackRequest,
-    Authorization: Annotated[Union[Any, None], Header()]=None,
+    Authorization: Annotated[Union[Any, None], Header()] = None,
 ) -> StreamingResponse:
     logger.info(f"Recieved feedback: {feedback_request}")
     person_id = authenticate(Authorization)
@@ -250,7 +271,7 @@ def save_feedback(
         success = save_user_feedback(
             person_id=person_id,
             bot_message_text=feedback_request.bot_message,
-            user_feedback=feedback_request.user_feedback
+            user_feedback=feedback_request.user_feedback,
         )
         if success:
             return StreamingResponse(content="Success", status_code=200)

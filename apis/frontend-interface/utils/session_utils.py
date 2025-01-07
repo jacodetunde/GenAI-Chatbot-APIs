@@ -11,6 +11,7 @@ ALLOWED_EMAILS = [
     # Add other emails here
 ]
 
+
 def initialize_session_state(st):
     """Initialize shared session state variables."""
     if "email" not in st.session_state:
@@ -24,9 +25,11 @@ def initialize_session_state(st):
     if "chat_messages" not in st.session_state:
         st.session_state["chat_messages"] = []
 
+
 def validate_email(email):
     """Validate email using regex."""
     return re.fullmatch(email_regex, email)
+
 
 def get_session_id():
     """Retrieve the current Streamlit session ID."""
