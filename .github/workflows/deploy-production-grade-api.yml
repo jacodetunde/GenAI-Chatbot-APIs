@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - episodes/production-grade-api/**
+      - apis/production-grade-api/**
       - .github/workflows/deploy-production-grade-api.yml
 
 permissions:
@@ -27,7 +27,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
       - name: Build, tag, and push docker image to Amazon ECR
-        working-directory: ./episodes/production-grade-api
+        working-directory: ./apis/production-grade-api
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: production-grade-api-repo

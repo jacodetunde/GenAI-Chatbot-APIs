@@ -15,14 +15,14 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
       - name: Build docker image
-        working-directory: ./episodes/production-grade-api
+        working-directory: ./apis/production-grade-api
         env:
-          REPOSITORY: genai-tutorial-backend
+          REPOSITORY: production-grade-api-repo
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
         run: |
           docker build \
-          -t genai-tutorial-backend \
+          -t production-grade-api-repo \
           --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} \
           --build-arg CLIENT_SECRET='my_client_secret' \
           --build-arg MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING} .

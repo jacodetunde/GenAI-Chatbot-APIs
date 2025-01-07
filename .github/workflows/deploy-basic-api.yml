@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - episodes/basic-api/**
+      - apis/basic-api/**
       - .github/workflows/deploy-basic-api.yml
 
 permissions:
@@ -27,7 +27,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
       - name: Build, tag, and push docker image to Amazon ECR
-        working-directory: ./episodes/basic-api
+        working-directory: ./apis/basic-api
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: basic-api-repo
