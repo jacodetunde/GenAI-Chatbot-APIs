@@ -271,7 +271,6 @@ def save_feedback(
     if person_id:
         logger.info(f"Authenticated user: {person_id}")
         success = save_user_feedback(
-            person_id=person_id,
             bot_message_text=feedback_request.bot_message,
             user_feedback=feedback_request.user_feedback,
         )
