@@ -38,7 +38,7 @@ string_padding = "<<<" + (" " * 1000) + ">>>"
 vectorstore = None
 
 
-def authenticate(auth_token: Any) -> Optional[Any]:
+def authenticate(auth_token: Any) -> Optional[Any]: # type: ignore
     bearer_token: str = auth_token.replace("Bearer ", "")
     output_payload: Dict[str, Any] = jwt.decode(
         bearer_token, client_secret, algorithms=["HS256"]
@@ -49,7 +49,7 @@ def authenticate(auth_token: Any) -> Optional[Any]:
     return None
 
 
-def get_vectorstore():
+def get_vectorstore(): # type: ignore
     global vectorstore
     if vectorstore is not None:
         return vectorstore  # Reuse the existing vectorstore
@@ -97,7 +97,7 @@ def get_prompt():
         Be creative, concise, and as practical as possible."""
 
 
-class UserRequest(BaseModel):
+class UserRequest(BaseModel): # type: ignore
     UserInput: Optional[str]
     maxTokens: int = default_max_tokens
     temperature: float = default_temperature
@@ -105,7 +105,7 @@ class UserRequest(BaseModel):
     document: Optional[str] = None
 
 
-@app.post("/chat_process")
+@app.post("/chat_process") # type: ignore
 def chat_process(
     user_request: UserRequest,
     Authorization: Union[str, None] = Header(None),

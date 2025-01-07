@@ -15,20 +15,20 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
       - name: Build docker image
-        working-directory: ./apis/basic-api
+        working-directory: ./apis/production-grade-api
         env:
-          REPOSITORY: basic-api-repo
+          REPOSITORY: production-grade-api-repo
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
         run: |
           docker build \
-          -t basic-api-repo \
+          -t production-grade-api-repo \
           --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} \
           --build-arg CLIENT_SECRET='my_client_secret' \
           --build-arg MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING} .
       - name: Run image
         run: |
-          CONTAINER_ID=$(docker run -d -p 8080:8080 basic-api-repo)
+          CONTAINER_ID=$(docker run -d -p 8080:8080 production-grade-api-repo)
           sleep 20
           docker ps -a
           docker inspect $CONTAINER_ID
@@ -40,5 +40,5 @@ jobs:
           fi
       - name: Test image
         run: |
-          pip install -r tests/basic-api-test/requirements.txt
-          pytest tests/basic-api-test/
+          pip install -r tests/production-grade-api-test/requirements.txt
+          pytest tests/production-grade-api-test/

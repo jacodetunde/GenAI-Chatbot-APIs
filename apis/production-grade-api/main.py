@@ -49,7 +49,7 @@ string_padding = "<<<" + (" " * 1000) + ">>>"
 vectorstore = None
 
 
-def authenticate(auth_token: Any) -> Optional[Any]: #type ignore
+def authenticate(auth_token: Any) -> Optional[Any]: # type: ignore
     bearer_token: str = auth_token.replace("Bearer ", "")
     output_payload: Dict[str, Any] = jwt.decode(
         bearer_token, client_secret, algorithms=["HS256"]
@@ -60,7 +60,7 @@ def authenticate(auth_token: Any) -> Optional[Any]: #type ignore
     return None
 
 
-def get_vectorstore():
+def get_vectorstore(): # type: ignore
     global vectorstore
     if vectorstore is not None:
         return vectorstore  # Reuse the existing vectorstore
@@ -103,12 +103,12 @@ def get_vectorstore():
         raise RuntimeError("Failed to initialize vectorstore")
 
 
-def load_conversation_history(person_id: str) -> List[Dict[str, Any]]: # type ignore
+def load_conversation_history(person_id: str) -> List[Dict[str, Any]]: # type: ignore
     user_conversation = conversation_collection.find_one({"person_id": person_id})
     return user_conversation.get("messages", []) if user_conversation else []
 
 
-def save_conversation_history(person_id: str, history: List[Dict[str, Any]]): #type ignoew
+def save_conversation_history(person_id: str, history: List[Dict[str, Any]]): # type: ignore
     conversation_collection.update_one(
         {"person_id": person_id},
         {"$set": {"messages": history}},
@@ -116,7 +116,7 @@ def save_conversation_history(person_id: str, history: List[Dict[str, Any]]): #t
     )
 
 
-def save_user_feedback(person_id, bot_message_text, user_feedback):
+def save_user_feedback(person_id, bot_message_text, user_feedback): # type: ignore
     found_message = False
     user_conversation = conversation_collection.find_one({"person_id": person_id})
     if not user_conversation or "messages" not in user_conversation:
@@ -143,14 +143,14 @@ def save_user_feedback(person_id, bot_message_text, user_feedback):
     return True  # Return True if feedback was saved successfully
 
 
-class UserRequest(BaseModel):
+class UserRequest(BaseModel): # type: ignore
     UserInput: Optional[str]
     maxTokens: int = default_max_tokens
     temperature: float = default_temperature
     model: str = default_model
 
 
-class FeedBackRequest(BaseModel):
+class FeedBackRequest(BaseModel): # type: ignore
     bot_message: str
     user_feedback: str
 
@@ -163,7 +163,7 @@ def get_prompt():
     )
 
 
-@app.post("/chat_process")
+@app.post("/chat_process") # type: ignore
 def chat_process(
     user_request: UserRequest,
     Authorization: Union[str, None] = Header(None),
@@ -259,7 +259,7 @@ async def chat_completion(
         yield "Error occurred while processing the request."
 
 
-@app.post("/save_feedback")
+@app.post("/save_feedback") # type: ignore
 def save_feedback(
     feedback_request: FeedBackRequest,
     Authorization: Annotated[Union[Any, None], Header()] = None,
