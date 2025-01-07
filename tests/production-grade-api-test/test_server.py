@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 client_secret = os.getenv("CLIENT_SECRET", "my_client_secret")
-server_url = os.getenv("SERVER_URL", "http://localhost:8080")
+server_url = os.getenv("SERVER_URL", "0.0.0.0:8080")
 
 test_person_id = "automation-test-user-" + uuid.uuid4().hex
 
