@@ -46,7 +46,7 @@ default_model = "gpt-4o"
 string_padding = "<<<" + (" " * 1000) + ">>>"
 
 # Global variable for vectorstore
-vectorstore = None
+vectorstore: Optional[Qdrant] = None
 
 
 def authenticate(auth_token: Any) -> Optional[Any]:  # type: ignore
@@ -60,10 +60,10 @@ def authenticate(auth_token: Any) -> Optional[Any]:  # type: ignore
     return None
 
 
-def get_vectorstore() -> Optional[Qdrant]:
+def get_vectorstore() -> Qdrant:
     global vectorstore
     if vectorstore is not None:
-        return vectorstore  # Reuse the existing vectorstore
+        return vectorstore
 
     try:
         # Load documents

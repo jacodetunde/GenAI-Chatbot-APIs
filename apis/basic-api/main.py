@@ -16,7 +16,7 @@ from config.settings import settings
 from dotenv import load_dotenv
 from typing import Optional, Union, Any, Dict, List, AsyncGenerator
 import uvicorn
-from langchain_community.vectorstores import Qdrant
+
 
 # Initialize FastAPI app
 app = FastAPI()
