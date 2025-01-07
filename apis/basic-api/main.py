@@ -38,7 +38,7 @@ string_padding = "<<<" + (" " * 1000) + ">>>"
 vectorstore = None
 
 
-def authenticate(auth_token: Any) -> Optional[Any]: 
+def authenticate(auth_token: Any) -> Optional[Any]:
     bearer_token: str = auth_token.replace("Bearer ", "")
     output_payload: Dict[str, Any] = jwt.decode(
         bearer_token, client_secret, algorithms=["HS256"]
@@ -97,7 +97,7 @@ def get_prompt() -> str:
         Be creative, concise, and as practical as possible."""
 
 
-class UserRequest(BaseModel): # type: ignore
+class UserRequest(BaseModel):  # type: ignore
     UserInput: Optional[str]
     maxTokens: int = default_max_tokens
     temperature: float = default_temperature
@@ -105,7 +105,7 @@ class UserRequest(BaseModel): # type: ignore
     document: Optional[str] = None
 
 
-@app.post("/chat_process") # type: ignore
+@app.post("/chat_process")  # type: ignore
 def chat_process(
     user_request: UserRequest,
     Authorization: Union[str, None] = Header(None),
@@ -118,7 +118,7 @@ def chat_process(
     return StreamingResponse(chat_completion(message_list))
 
 
-async def chat_completion(message_list: List[Any]) -> AsyncGenerator[str, None]:
+async def chat_completion(message_list: List[Any]) -> AsyncGenerator[str, None]:  # type: ignore
     global vectorstore
     if vectorstore is None:
         vectorstore = get_vectorstore()
