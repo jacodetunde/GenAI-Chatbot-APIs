@@ -108,7 +108,7 @@ def load_conversation_history(person_id: str) -> List[Dict[str, Any]]:
     return user_conversation.get("messages", []) if user_conversation else []
 
 
-def save_conversation_history(person_id: str, history: List[Dict[str, Any]]):
+def save_conversation_history(person_id: str, history: List[Dict[str, Any]]) -> None:
     conversation_collection.update_one(
         {"person_id": person_id},
         {"$set": {"messages": history}},
@@ -264,7 +264,7 @@ async def chat_completion(
 @app.post("/save_feedback")
 def save_feedback(
     feedback_request: FeedBackRequest,
-    Authorization: Annotated[Union[Any, None], Header()] = None,
+    Authorization: Annotated[Union[str, None], Header()] = None,
 ) -> StreamingResponse:
     logger.info(f"Received feedback: {feedback_request}")
     person_id = authenticate(Authorization)
