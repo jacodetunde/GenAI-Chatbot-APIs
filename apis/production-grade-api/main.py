@@ -261,7 +261,7 @@ async def chat_completion(
         yield "Error occurred while processing the request."
 
 
-@app.post("/save_feedback")
+@app.post("/save_feedback")  # type: ignore
 def save_feedback(
     feedback_request: FeedBackRequest,
     Authorization: Annotated[Union[str, None], Header()] = None,
