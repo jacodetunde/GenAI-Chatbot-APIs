@@ -50,10 +50,10 @@ def authenticate(auth_token: Any) -> Optional[Any]:
     return None
 
 
-def get_vectorstore() -> Optional[Qdrant]:
+def get_vectorstore() -> Qdrant:
     global vectorstore
     if vectorstore is not None:
-        return vectorstore  # Reuse the existing vectorstore
+        return vectorstore
 
     try:
         # Load documents
@@ -124,10 +124,15 @@ async def chat_completion(message_list: List[Any]) -> AsyncGenerator[str, None]:
     if vectorstore is None:
         vectorstore = get_vectorstore()
 
+    if vectorstore is None:
+        raise RuntimeError("Vectorstore is not initialized.")
+
     try:
         # Extract user input and retrieve context
         user_input = message_list[-1]["text"]
-        context_documents = vectorstore.similarity_search(user_input, k=3)
+        context_documents = vectorstore.similarity_search(
+            user_input, k=3
+        )  # Safe to call now
         context = "\n".join([doc.page_content for doc in context_documents])
 
         # Format the system prompt with context
