@@ -16,6 +16,7 @@ from config.settings import settings
 from dotenv import load_dotenv
 from typing import Optional, Union, Any, Dict, List, AsyncGenerator
 import uvicorn
+from langchain_community.vectorstores import Qdrant
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -35,7 +36,7 @@ default_model = "gpt-4o"
 string_padding = "<<<" + (" " * 1000) + ">>>"
 
 # Global variable for vectorstore
-vectorstore = None
+vectorstore: Optional[Qdrant] = None
 
 
 def authenticate(auth_token: Any) -> Optional[Any]:
@@ -118,7 +119,7 @@ def chat_process(
     return StreamingResponse(chat_completion(message_list))
 
 
-async def chat_completion(message_list: List[Any]) -> AsyncGenerator[str, None]:  # type: ignore
+async def chat_completion(message_list: List[Any]) -> AsyncGenerator[str, None]:
     global vectorstore
     if vectorstore is None:
         vectorstore = get_vectorstore()
