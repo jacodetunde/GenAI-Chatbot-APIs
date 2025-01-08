@@ -63,3 +63,4 @@ def test_save_feedback():
     )
 
     assert response.status_code == 200
+    assert len(parsed_response) > 0
