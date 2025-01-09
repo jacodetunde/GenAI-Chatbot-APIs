@@ -15,6 +15,11 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
       
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'  # Use your required Python version
+      
       - name: Build Docker Image
         working-directory: ./apis/production-grade-api
         env:
@@ -47,15 +52,16 @@ jobs:
               exit 1
           fi
       
-      - name: Setup Python Environment
+      - name: Install Python Dependencies
         run: |
-          python -m venv venv
+          python3 -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
           pip install -r tests/production-grade-api-test/requirements.txt
       
       - name: Run Tests
+        run: |
+          source venv/bin/activate
+          pytest tests/production-grade-api-test/
         env:
           SERVER_URL: "http://localhost:8080"
-        run: |
-          pytest tests/production-grade-api-test/
