@@ -3,7 +3,11 @@ import jwt
 from pydantic import BaseModel
 from fastapi import FastAPI, Header
 from fastapi.responses import StreamingResponse
-from langchain_community.document_loaders import DirectoryLoader, TextLoader, PyMuPDFLoader
+from langchain_community.document_loaders import (
+    DirectoryLoader,
+    TextLoader,
+    PyMuPDFLoader,
+)
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Qdrant
 from langchain_openai import OpenAIEmbeddings
@@ -13,13 +17,14 @@ from dotenv import load_dotenv
 from typing import Optional, Union, Any, Dict, List, AsyncGenerator
 import uvicorn
 
+
 # Initialize FastAPI app
 app = FastAPI()
 
 # Load environment variables
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY", "my_api_key")
-client_secret = os.getenv("CLIENT_SECRET", "my_client_secret")
+openai_api_key: str = os.getenv("OPENAI_API_KEY", "my_api_key")
+client_secret: str = os.getenv("CLIENT_SECRET", "my_client_secret")
 
 openai_client = OpenAI(api_key=openai_api_key)
 default_max_tokens = 4096
@@ -31,23 +36,24 @@ default_model = "gpt-4o"
 string_padding = "<<<" + (" " * 1000) + ">>>"
 
 # Global variable for vectorstore
-vectorstore = None
-
+vectorstore: Optional[Qdrant] = None
 
 
 def authenticate(auth_token: Any) -> Optional[Any]:
     bearer_token: str = auth_token.replace("Bearer ", "")
-    output_payload: Dict[str, Any] = jwt.decode(bearer_token, client_secret, algorithms=["HS256"])
+    output_payload: Dict[str, Any] = jwt.decode(
+        bearer_token, client_secret, algorithms=["HS256"]
+    )
     if "person_id" in output_payload:
         return str(output_payload["person_id"])
-    
+
     return None
 
 
-def get_vectorstore():
+def get_vectorstore() -> Qdrant:
     global vectorstore
     if vectorstore is not None:
-        return vectorstore  # Reuse the existing vectorstore
+        return vectorstore
 
     try:
         # Load documents
@@ -75,7 +81,8 @@ def get_vectorstore():
         # Initialize embedding model and vectorstore
         embeddings = OpenAIEmbeddings(model=settings.EMBEDDING_MODEL)
         vectorstore = Qdrant.from_documents(
-            texts, embeddings,
+            texts,
+            embeddings,
             location=":memory:",
             collection_name="PMarca",
         )
@@ -86,14 +93,12 @@ def get_vectorstore():
         raise RuntimeError("Failed to initialize vectorstore")
 
 
-def get_prompt():
-    return (
-        """Provide answers to the user's question as bullet points. Most of your response should come from the {context}.
+def get_prompt() -> str:
+    return """Provide answers to the user's question as bullet points. Most of your response should come from the {context}.
         Be creative, concise, and as practical as possible."""
-    )
 
 
-class UserRequest(BaseModel):
+class UserRequest(BaseModel):  # type: ignore
     UserInput: Optional[str]
     maxTokens: int = default_max_tokens
     temperature: float = default_temperature
@@ -101,7 +106,7 @@ class UserRequest(BaseModel):
     document: Optional[str] = None
 
 
-@app.post("/chat_process")
+@app.post("/chat_process")  # type: ignore
 def chat_process(
     user_request: UserRequest,
     Authorization: Union[str, None] = Header(None),
@@ -119,10 +124,15 @@ async def chat_completion(message_list: List[Any]) -> AsyncGenerator[str, None]:
     if vectorstore is None:
         vectorstore = get_vectorstore()
 
+    if vectorstore is None:
+        raise RuntimeError("Vectorstore is not initialized.")
+
     try:
         # Extract user input and retrieve context
         user_input = message_list[-1]["text"]
-        context_documents = vectorstore.similarity_search(user_input, k=3)
+        context_documents = vectorstore.similarity_search(
+            user_input, k=3
+        )  # Safe to call now
         context = "\n".join([doc.page_content for doc in context_documents])
 
         # Format the system prompt with context

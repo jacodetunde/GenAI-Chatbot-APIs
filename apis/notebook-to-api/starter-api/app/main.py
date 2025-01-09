@@ -9,9 +9,11 @@ app = FastAPI()
 # Load environment variables
 load_dotenv()
 
+
 # Define Pydantic model for requests
 class QuestionRequest(BaseModel):
     question: str
+
 
 # API endpoint to handle questions
 @app.post("/ask")

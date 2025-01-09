@@ -65,7 +65,10 @@ def reset_session_state():
 
 def check_email_password():
     def email_entered():
-        if re.fullmatch(email_regex, st.session_state["email"]) and "@gmail.com" in st.session_state["email"]:
+        if (
+            re.fullmatch(email_regex, st.session_state["email"])
+            and "@gmail.com" in st.session_state["email"]
+        ):
             st.session_state["valid_email"] = {
                 "email": st.session_state["email"].lower().strip(),
                 "session_id": _get_session_id(),
@@ -76,7 +79,10 @@ def check_email_password():
             logger.warning("Invalid email entered.")
 
     def password_entered():
-        if "password" in st.session_state and st.session_state["password"] == access_password:
+        if (
+            "password" in st.session_state
+            and st.session_state["password"] == access_password
+        ):
             st.session_state["password_correct"] = True
             logger.info("Correct password entered.")
         else:
@@ -91,13 +97,18 @@ def check_email_password():
     ):
 
         st.text_input("Email", type="default", on_change=email_entered, key="email")
-        st.text_input("Password", type="password", on_change=password_entered, key="password")
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
 
         submit = st.button("Login")
 
         if "valid_email" in st.session_state and not st.session_state["valid_email"]:
             st.error("Invalid Email")
-        elif "password_correct" in st.session_state and not st.session_state["password_correct"]:
+        elif (
+            "password_correct" in st.session_state
+            and not st.session_state["password_correct"]
+        ):
             st.error("Invalid Password")
         return False
     else:
@@ -137,17 +148,25 @@ def main():
             log_out = st.button("Log out")
         # Set user email
         user_email = user_cookie or st.session_state["email"].lower().strip()
-        st.session_state["email"] = user_email  # Ensure email is stored in session state
+        st.session_state["email"] = (
+            user_email  # Ensure email is stored in session state
+        )
 
         logger.info(f"User logged in: {user_email}")
 
         if "authentication_status" in st.session_state and log_out:
             # Clear all session state except chat_messages
-            keys_to_clear = [key for key in st.session_state.keys() if key != "chat_messages"]
+            keys_to_clear = [
+                key for key in st.session_state.keys() if key != "chat_messages"
+            ]
             for key in keys_to_clear:
                 del st.session_state[key]
-            expires_at = datetime.datetime.now() + datetime.timedelta(days=cookie_expiry_days)
-            cookie_manager.set(user_cookie_name, "", key=user_cookie_name, expires_at=expires_at)
+            expires_at = datetime.datetime.now() + datetime.timedelta(
+                days=cookie_expiry_days
+            )
+            cookie_manager.set(
+                user_cookie_name, "", key=user_cookie_name, expires_at=expires_at
+            )
             st.rerun()
 
         else:
@@ -163,7 +182,9 @@ def main():
                     "session_id": cookie_manager.get(auth_cookie_name),
                 }
             elif auth_cookie and not user_cookie:
-                expires_at = datetime.datetime.now() + datetime.timedelta(days=cookie_expiry_days)
+                expires_at = datetime.datetime.now() + datetime.timedelta(
+                    days=cookie_expiry_days
+                )
                 cookie_manager.set(
                     user_cookie_name,
                     st.session_state["email"].lower().strip(),
@@ -171,7 +192,9 @@ def main():
                     expires_at=expires_at,
                 )
             else:
-                expires_at = datetime.datetime.now() + datetime.timedelta(days=cookie_expiry_days)
+                expires_at = datetime.datetime.now() + datetime.timedelta(
+                    days=cookie_expiry_days
+                )
                 cookie_manager.set(
                     auth_cookie_name,
                     _get_session_id(),
@@ -188,10 +211,6 @@ def main():
         login_placeholder.markdown("")
         st.switch_page("pages/1_chat.py")
 
+
 if __name__ == "__main__":
     main()
-
-
-
-
-

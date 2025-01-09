@@ -1,9 +1,9 @@
-name: Build and Deploy Basic GenAI API Backend Image to ECR
+name: Build and Deploy Production Grade API to ECR
 on:
   workflow_dispatch:
   push:
     paths:
-      - episodes/production-grade-api/**
+      - apis/production-grade-api/**
       - .github/workflows/deploy-production-grade-api.yml
 
 permissions:
@@ -27,13 +27,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
       - name: Build, tag, and push docker image to Amazon ECR
-        working-directory: ./episodes/production-grade-api
+        working-directory: ./apis/production-grade-api
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: production-grade-api-repo
           IMAGE_TAG: ${{ github.sha }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          CLIENT_SECRET: ${{ secrets.API_SECRET }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
         run: |
           docker build \

@@ -31,6 +31,7 @@ timeout = httpx.Timeout(60.0)
 chunk_render_time = 0.01
 buffer_padding_template = re.compile(r"(<<<) *(>>>)|(<<<) *| *(>>>)")
 
+
 def hide_controls():
     """Hide Streamlit default menu and footer."""
     hide_streamlit_style = """
@@ -41,9 +42,11 @@ def hide_controls():
         """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
+
 def get_new_feedback_key(message_index):
     """Generate a unique feedback key using the message index and UUID."""
     return f"feedback_{message_index}_{uuid.uuid4().hex[:8]}"
+
 
 def submit_feedback(bot_message_text, headers, message_index, feedback_key):
     user_feedback = st.session_state.get(feedback_key, "")
@@ -55,7 +58,9 @@ def submit_feedback(bot_message_text, headers, message_index, feedback_key):
         }
 
         try:
-            response = httpx.post(feedback_uri, headers=headers, json=feedback_data, timeout=30.0)
+            response = httpx.post(
+                feedback_uri, headers=headers, json=feedback_data, timeout=30.0
+            )
             if response.status_code == 200:
                 st.toast("Feedback submitted successfully!", icon="✅")
             else:
@@ -78,20 +83,21 @@ def main():
 
     login_placeholder = st.empty()
     login_placeholder.markdown("**Please log in to continue:**")
-    
+
     # Initialize session state
     if "feedback_store" not in st.session_state:
         st.session_state["feedback_store"] = {}
-     # Initialize session state
+    # Initialize session state
     if "chat_messages" not in st.session_state:
         st.session_state["chat_messages"] = []  # Initialize only if not already set
         logger.info("Session state 'chat_messages' initialized as an empty list.")
 
-
     auth_cookie = cookie_manager.get(auth_cookie_name)
     user_cookie = cookie_manager.get(user_cookie_name)
 
-    if (user_cookie and auth_cookie) or st.session_state.get("authentication_status", False):
+    if (user_cookie and auth_cookie) or st.session_state.get(
+        "authentication_status", False
+    ):
         logger.info("User authenticated successfully.")
         login_placeholder.empty()
 
@@ -133,7 +139,9 @@ def main():
                         )
 
         # Input for user message
-        prompt = st.chat_input("What changes would you like to make to the first draft?")
+        prompt = st.chat_input(
+            "What changes would you like to make to the first draft?"
+        )
         if prompt:
             # Append user message
             st.session_state.chat_messages.append({"role": "user", "content": prompt})
@@ -157,11 +165,13 @@ def main():
                             for chunk in response.iter_bytes():
                                 if chunk:
                                     decoded_data = chunk.decode("utf-8")
-                                    parsed_data = re.sub(buffer_padding_template, "", decoded_data)
+                                    parsed_data = re.sub(
+                                        buffer_padding_template, "", decoded_data
+                                    )
                                     raw_response += parsed_data
                                     message_placeholder.markdown(raw_response)
                                     time.sleep(chunk_render_time)
-                                    
+
                         assistant_response = raw_response.strip()
 
                         # Append assistant response to session state
@@ -178,5 +188,7 @@ def main():
     else:
         logger.warning("Authentication failed. User cookies or session state invalid.")
         st.error("Authentication failed. Please log in again.")
+
+
 if __name__ == "__main__":
     main()

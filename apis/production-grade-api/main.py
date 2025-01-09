@@ -3,9 +3,13 @@ import jwt
 import datetime
 from pydantic import BaseModel
 from pymongo import MongoClient
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header
 from fastapi.responses import StreamingResponse
-from langchain_community.document_loaders import DirectoryLoader, TextLoader, PyMuPDFLoader
+from langchain_community.document_loaders import (
+    DirectoryLoader,
+    TextLoader,
+    PyMuPDFLoader,
+)
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Qdrant
 from langchain_openai import OpenAIEmbeddings
@@ -24,9 +28,9 @@ app = FastAPI()
 
 # Load environment variables
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY", "my_api_key")
-client_secret = os.getenv("CLIENT_SECRET", "my_client_secret")
-mongo_connection_string = os.getenv("MONGO_CONNECTION_STRING")
+openai_api_key: str = os.getenv("OPENAI_API_KEY", "my_api_key")
+client_secret: str = os.getenv("CLIENT_SECRET", "my_client_secret")
+mongo_connection_string: Optional[str] = os.getenv("MONGO_CONNECTION_STRING")
 
 # MongoDB Setup
 mongo_client = MongoClient(mongo_connection_string)
@@ -42,22 +46,24 @@ default_model = "gpt-4o"
 string_padding = "<<<" + (" " * 1000) + ">>>"
 
 # Global variable for vectorstore
-vectorstore = None
+vectorstore: Optional[Qdrant] = None
 
 
 def authenticate(auth_token: Any) -> Optional[Any]:
     bearer_token: str = auth_token.replace("Bearer ", "")
-    output_payload: Dict[str, Any] = jwt.decode(bearer_token, client_secret, algorithms=["HS256"])
+    output_payload: Dict[str, Any] = jwt.decode(
+        bearer_token, client_secret, algorithms=["HS256"]
+    )
     if "person_id" in output_payload:
         return str(output_payload["person_id"])
-    
+
     return None
 
 
-def get_vectorstore():
+def get_vectorstore() -> Qdrant:
     global vectorstore
     if vectorstore is not None:
-        return vectorstore  # Reuse the existing vectorstore
+        return vectorstore
 
     try:
         # Load documents
@@ -85,7 +91,8 @@ def get_vectorstore():
         # Initialize embedding model and vectorstore
         embeddings = OpenAIEmbeddings(model=settings.EMBEDDING_MODEL)
         vectorstore = Qdrant.from_documents(
-            texts, embeddings,
+            texts,
+            embeddings,
             location=":memory:",
             collection_name="PMarca",
         )
@@ -101,14 +108,17 @@ def load_conversation_history(person_id: str) -> List[Dict[str, Any]]:
     return user_conversation.get("messages", []) if user_conversation else []
 
 
-def save_conversation_history(person_id: str, history: List[Dict[str, Any]]):
+def save_conversation_history(person_id: str, history: List[Dict[str, Any]]) -> None:
     conversation_collection.update_one(
         {"person_id": person_id},
         {"$set": {"messages": history}},
         upsert=True,
     )
 
-def save_user_feedback(person_id, bot_message_text, user_feedback):
+
+def save_user_feedback(
+    person_id: str, bot_message_text: str, user_feedback: str
+) -> bool:
     found_message = False
     user_conversation = conversation_collection.find_one({"person_id": person_id})
     if not user_conversation or "messages" not in user_conversation:
@@ -121,7 +131,8 @@ def save_user_feedback(person_id, bot_message_text, user_feedback):
         message = messages[idx]
         if (
             message.get("role") == "assistant"
-            and message.get("content", "").strip()[:100] == bot_message_text.strip()[:100]
+            and message.get("content", "").strip()[:100]
+            == bot_message_text.strip()[:100]
         ):
             message["feedback"] = user_feedback
             found_message = True
@@ -134,26 +145,27 @@ def save_user_feedback(person_id, bot_message_text, user_feedback):
     return True  # Return True if feedback was saved successfully
 
 
-class UserRequest(BaseModel):
+class UserRequest(BaseModel):  # type: ignore
     UserInput: Optional[str]
     maxTokens: int = default_max_tokens
     temperature: float = default_temperature
     model: str = default_model
 
 
-class FeedBackRequest(BaseModel):
+class FeedBackRequest(BaseModel):  # type: ignore
     bot_message: str
     user_feedback: str
 
 
-def get_prompt():
+def get_prompt() -> str:
     return (
         "Provide answers to the user's question as bullet points. "
         "Most of your response should come from the {context}. "
         "Be creative, concise, and as practical as possible."
     )
 
-@app.post("/chat_process")
+
+@app.post("/chat_process")  # type: ignore
 def chat_process(
     user_request: UserRequest,
     Authorization: Union[str, None] = Header(None),
@@ -196,18 +208,25 @@ async def chat_completion(
             user_conversation_history[0]["content"] = system_prompt
             user_conversation_history[0]["timestamp"] = datetime.datetime.now()
         else:
-            user_conversation_history.insert(0, {"role": "system", "content": system_prompt})
+            user_conversation_history.insert(
+                0, {"role": "system", "content": system_prompt}
+            )
 
         # # Add retrieved context to conversation history
         user_conversation_history.append(
-            {"role": "user", "content": user_input, "timestamp": datetime.datetime.now()}
+            {
+                "role": "user",
+                "content": user_input,
+                "timestamp": datetime.datetime.now(),
+            }
         )
 
         # Format the messages for OpenAI API
         formatted_message = [
             {"role": m["role"], "content": m["content"]}
             for m in user_conversation_history
-            if isinstance(m.get("content"), str) and m.get("role") in ["system", "user", "assistant"]
+            if isinstance(m.get("content"), str)
+            and m.get("role") in ["system", "user", "assistant"]
         ]
         message_list_formatted = formatted_message[-message_context_limit:]
 
@@ -227,7 +246,11 @@ async def chat_completion(
 
         # Save assistant message to conversation history
         user_conversation_history.append(
-            {"role": "assistant", "content": response_text, "timestamp": datetime.datetime.now()}
+            {
+                "role": "assistant",
+                "content": response_text,
+                "timestamp": datetime.datetime.now(),
+            }
         )
 
         # Save updated conversation history to MongoDB
@@ -238,19 +261,19 @@ async def chat_completion(
         yield "Error occurred while processing the request."
 
 
-@app.post("/save_feedback")
+@app.post("/save_feedback")  # type: ignore
 def save_feedback(
     feedback_request: FeedBackRequest,
-    Authorization: Annotated[Union[Any, None], Header()]=None,
+    Authorization: Annotated[Union[str, None], Header()] = None,
 ) -> StreamingResponse:
-    logger.info(f"Recieved feedback: {feedback_request}")
+    logger.info(f"Received feedback: {feedback_request}")
     person_id = authenticate(Authorization)
     if person_id:
         logger.info(f"Authenticated user: {person_id}")
         success = save_user_feedback(
             person_id=person_id,
             bot_message_text=feedback_request.bot_message,
-            user_feedback=feedback_request.user_feedback
+            user_feedback=feedback_request.user_feedback,
         )
         if success:
             return StreamingResponse(content="Success", status_code=200)

@@ -1,4 +1,4 @@
-name: Test GenAI Tutorial Backend
+name: Test Basic API Backend
 
 on: 
   workflow_dispatch:
@@ -15,16 +15,16 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
       - name: Build docker image
-        working-directory: ./episodes/production-grade-api
+        working-directory: ./apis/basic-api
         env:
-          REPOSITORY: genai-tutorial-backend
+          REPOSITORY: basic-api-repo
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
         run: |
           docker build \
-          -t genai-tutorial-backend \
+          -t basic-api-repo \
           --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} \
-          --build-arg CLIENT_SECRET='my_client_secret' \
+           --build-arg CLIENT_SECRET=${CLIENT_SECRET} \
           --build-arg MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING} .
       - name: Run image
         run: |
@@ -41,4 +41,4 @@ jobs:
       - name: Test image
         run: |
           pip install -r tests/basic-api-test/requirements.txt
-          pytest tests/production-grade-test/
+          pytest tests/basic-api-test/

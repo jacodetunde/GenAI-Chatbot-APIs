@@ -1,0 +1,67 @@
+name: Test Production Grade API Backend
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  ecr-build-and-deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'  # Use your required Python version
+      
+      - name: Build Docker Image
+        working-directory: ./apis/production-grade-api
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
+        run: |
+          docker build \
+          -t production-grade-api-repo \
+          --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} \
+          --build-arg CLIENT_SECRET='my_client_secret' \
+          --build-arg MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING} .
+      
+      - name: Run Container
+        env:
+          CLIENT_SECRET: my_client_secret
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
+        run: |
+          CONTAINER_ID=$(docker run -d -p 8080:8080 \
+              -e CLIENT_SECRET=$CLIENT_SECRET \
+              -e OPENAI_API_KEY=$OPENAI_API_KEY \
+              -e MONGO_CONNECTION_STRING=$MONGO_CONNECTION_STRING \
+              production-grade-api-repo)
+          sleep 40
+          docker logs $CONTAINER_ID
+          if [ "`docker inspect -f '{{json .State.Running}}' $CONTAINER_ID`" == "true" ]; then
+              echo "SUCCESS";
+          else
+              echo "FAILED";
+              exit 1
+          fi
+      
+      - name: Install Python Dependencies
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r tests/production-grade-api-test/requirements.txt
+      
+      - name: Run Tests
+        run: |
+          source venv/bin/activate
+          pytest tests/production-grade-api-test/
+        env:
+          SERVER_URL: "http://localhost:8080"

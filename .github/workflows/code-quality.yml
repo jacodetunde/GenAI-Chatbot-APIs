@@ -7,11 +7,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Lint /episodes
+      - name: Lint /apis
         uses: psf/black@stable
         with:
           options: "--check --verbose"
-          src: "./episodes"
+          src: "./apis"
           version: "~= 24.0"
       - name: Lint /tests
         uses: psf/black@stable
@@ -28,7 +28,7 @@ jobs:
           python-version: "3.9"
       - name: Install Mypy
         run: pip install mypy types-python-dateutil types-requests
-      - name: Type Check /episodes/basic-api
-        run: mypy ./episodes/basic-api --strict --ignore-missing-imports
-      - name: Type Check /episodes/production-grade-api
-        run: mypy ./episodes/production-grade-api --strict --ignore-missing-imports
+      - name: Type Check /apis/basic-api
+        run: mypy ./apis/basic-api --strict --ignore-missing-imports
+      - name: Type Check /apis/production-grade-api
+        run: mypy ./apis/production-grade-api --strict --ignore-missing-imports
