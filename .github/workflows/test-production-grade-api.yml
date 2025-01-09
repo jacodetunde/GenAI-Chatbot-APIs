@@ -1,6 +1,6 @@
 name: Test GenAI Tutorial Backend
 
-on: 
+on:
   workflow_dispatch:
   pull_request:
 
@@ -14,10 +14,10 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
-      - name: Build docker image
+      
+      - name: Build Docker Image
         working-directory: ./apis/production-grade-api
         env:
-          REPOSITORY: production-grade-api-repo
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
         run: |
@@ -26,22 +26,36 @@ jobs:
           --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} \
           --build-arg CLIENT_SECRET='my_client_secret' \
           --build-arg MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING} .
-      - name: Run image
+      
+      - name: Run Container
+        env:
+          CLIENT_SECRET: my_client_secret
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
         run: |
-          CONTAINER_ID=$(docker run -d -p 8080:8080 production-grade-api-repo)
-          sleep 20
-          docker ps -a
-          docker inspect $CONTAINER_ID
-          if [ "`docker inspect -f \"{{json .State.Running}}\" $CONTAINER_ID`"=="true" ]; then
+          CONTAINER_ID=$(docker run -d -p 8080:8080 \
+              -e CLIENT_SECRET=$CLIENT_SECRET \
+              -e OPENAI_API_KEY=$OPENAI_API_KEY \
+              -e MONGO_CONNECTION_STRING=$MONGO_CONNECTION_STRING \
+              production-grade-api-repo)
+          sleep 40
+          docker logs $CONTAINER_ID
+          if [ "`docker inspect -f '{{json .State.Running}}' $CONTAINER_ID`" == "true" ]; then
               echo "SUCCESS";
           else
               echo "FAILED";
               exit 1
           fi
+      
       - name: Setup Python Environment
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
           pip install -r tests/production-grade-api-test/requirements.txt
+      
+      - name: Run Tests
+        env:
+          SERVER_URL: "http://localhost:8080"
+        run: |
           pytest tests/production-grade-api-test/
