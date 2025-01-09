@@ -1,4 +1,4 @@
-name: Test GenAI Tutorial Backend
+name: Test Basic API Backend
 
 on: 
   workflow_dispatch:

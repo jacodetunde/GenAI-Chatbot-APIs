@@ -1,4 +1,4 @@
-name: Build and Deploy Basic GenAI API Backend Image to ECR
+name: Build and Deploy Basic API Backend Image to ECR
 on:
   workflow_dispatch:
   push:
